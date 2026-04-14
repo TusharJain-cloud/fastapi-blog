@@ -1,0 +1,32 @@
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+
+app = FastAPI()
+
+posts: list[dict] = [
+    {
+        "id": 1,
+        "author": "Tushar Jain",
+        "title": "FastAPI is Awesome",
+        "content": "This framework is really easy to use and super fast.",
+        "date_posted": "April 14, 2026",
+    },
+    {
+        "id": 2,
+        "author": "Jane Doe",
+        "title": "Python is Great for Web Development",
+        "content": "Python is a great language for web development, and FastAPI makes it even better.",
+        "date_posted": "April 13, 2026",
+    },
+]
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/posts", response_class=HTMLResponse, include_in_schema=False)
+def home():
+    return f"<h1>{posts[0]['title']}</h1>"
+
+
+@app.get("/api/posts")
+def home():
+    return posts
