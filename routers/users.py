@@ -7,8 +7,15 @@ from sqlalchemy.orm import selectinload
 
 import models
 from database import get_db
-from schemas import PostResponse, UserCreate, UserResponse, UserUpdate
+from schemas import PostResponse, UserCreate, UserUpdate, UserPublic, UserPrivate, Token
 
+from datetime import timedelta
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import func
+
+from auth import create_access_token, hash_password, ouath2_scheme, verify_access_token, verify_password
+
+from config import settings
 
 router = APIRouter()
 
@@ -18,12 +25,12 @@ router = APIRouter()
 @router.post(
     # in main.py we will create "/api/users" so whenever "" are used in users.py it will end up that route
     "",
-    response_model=UserResponse,
+    response_model=UserPrivate,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_user(user: UserCreate, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(
-        select(models.User).where(models.User.username == user.username),
+        select(models.User).where(func.lower(models.User.username) == user.username.lower()),
     )
     existing_user = result.scalars().first()
     if existing_user:
