@@ -13,7 +13,7 @@ from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func
 
-from auth import create_access_token, hash_password, ouath2_scheme, verify_access_token, verify_password
+from auth import create_access_token, hash_password, oauth2_scheme, verify_access_token, verify_password
 
 from config import settings
 
@@ -130,7 +130,7 @@ async def get_current_user(
     return user
 
 ## get_user
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get("/{user_id}", response_model=UserPublic)
 async def get_user(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.User).where(models.User.id == user_id))
     user = result.scalars().first()
@@ -207,7 +207,7 @@ async def get_user_posts(user_id: int, db: Annotated[AsyncSession, Depends(get_d
 #     db.refresh(user)
 #     return user
 
-@router.patch("/{user_id}", response_model=UserResponse)
+@router.patch("/{user_id}", response_model=UserPrivate)
 async def update_user(
     user_id: int,
     user_update: UserUpdate,
@@ -220,9 +220,9 @@ async def update_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    if user_update.username is not None and user_update.username != user.username:
+    if user_update.username is not None and user_update.username.lower() != user.username.lower():
         result = await db.execute(
-            select(models.User).where(models.User.username == user_update.username),
+            select(models.User).where(func.lower(models.User.username) == user_update.username.lower()),
         )
         existing_user = result.scalars().first()
         if existing_user:
@@ -230,9 +230,9 @@ async def update_user(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Username already exists",
             )
-    if user_update.email is not None and user_update.email != user.email:
+    if user_update.email is not None and user_update.email.lower() != user.email.lower():
         result = await db.execute(
-            select(models.User).where(models.User.email == user_update.email),
+            select(models.User).where(func.lower(models.User.email) == user_update.email.lower()),
         )
         existing_email = result.scalars().first()
         if existing_email:
@@ -242,9 +242,9 @@ async def update_user(
             )
 
     if user_update.username is not None:
-        user.username = user_update.username
+        user.username = user_update.username.lower()
     if user_update.email is not None:
-        user.email = user_update.email
+        user.email = user_update.email.lower()
     if user_update.image_file is not None:
         user.image_file = user_update.image_file
 
