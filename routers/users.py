@@ -402,7 +402,7 @@ async def update_user(
             )
 
     if user_update.username is not None:
-        user.username = user_update.username.lower()
+        user.username = user_update.username
     if user_update.email is not None:
         user.email = user_update.email.lower()
     # if user_update.image_file is not None:
